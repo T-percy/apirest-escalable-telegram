@@ -7,6 +7,7 @@ Guia paso a paso para construir apirest robusta y altamente escalable, separando
 - [Instalar dependencias](#Instalar-dependencias)
 - [Ajustar package.json](#Ajustar-package.json)
 - [Control de versiones con git y github](#Control-de-versiones-con-git-y-github)
+- [Arquitectura backend (3 capas)](#Arquitectura-backend-(3-capas))
 
 
 ## Preparar entorno de trabajo
@@ -70,14 +71,14 @@ npm i express dotenv multer cors morgan mongoose
 "main": "server.js",
 ```
 
-Opción 1
+Opción 1 scripts
 ```bash
 "dev": "nodemon src/server.js",
 "start": "node src/server.js",
 "lint": "eslint",
 ```
 
-Opción 2
+Opción 2 scripts
 ```bash
 "dev": "DEBUG=app:* nodemon src/server.js",
 "start": "NODE_ENV=production node src/server.js",
@@ -122,3 +123,20 @@ y en adelante solo usar:
 ```bash
 git push
 ```
+
+## Arquitectura backend (3 capas)
+* `carpeta src` 
+    * `server.js` >>> CAPA DEL SERVIDOR: comprobar peticiones para que pasen al routes.js o sean rechazadas
+    * `Carpeta network` >>> CAPA DE RED
+        - `routes.js` ---Comprobar la ruta de la petición para llamar al componente correcto
+        - `response.js` ---Gestionar respuestas coherentes ya sean de (exito o error) a las peticiones del cliente.
+    * `Carpeta componentes` >>> CAPA DE COMPONENTES
+        - `Carpeta componente1` === Contiene archivos del componente
+            - `network.js` ---Enviará petición al controlador y devolvera la respuesta al response.js
+            - `controller.js` ---Ejecutará las acciones o funciones, segun la petición
+            - `store.js` ---Responsable de dónde y cómo se guardará la información
+            - `model.js` ---Definir la estructura de los datos, ya sean colecciones o tablas
+        - `Carpeta componente...`
+    * `Carpeta config` >>> Para configuraciones del proyecto como conexión a BD, etc, o cualquier otra configuración que necesite ser ajustada sin modificar el codigo fuente.
+    * `Carpeta utils` >>> Para funciones helpers (ayudantes para tareas repetitivas)
+    * `Carpeta public` >>> Para los archivos estaticos (frontend) y subir archivos
