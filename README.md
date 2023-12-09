@@ -140,3 +140,39 @@ git push
     * `Carpeta config` >>> Para configuraciones del proyecto como conexión a BD, etc, o cualquier otra configuración que necesite ser ajustada sin modificar el codigo fuente.
     * `Carpeta utils` >>> Para funciones helpers (ayudantes para tareas repetitivas)
     * `Carpeta public` >>> Para los archivos estaticos (frontend) y subir archivos
+
+
+## Creando y ejecutando servidor
+1. En `server.js` importar `express`
+```bash
+const express = require('express');
+```
+2. Crear el servidor con express
+```bash
+const app = express();
+```
+3. Declarar puerto e inicializar con variable de entorno
+```bash
+require('dotenv').config();
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log('🔥🔥🔥 http://localhost:' + PORT + ' 🔥🔥🔥');
+});
+```
+4. Declarar y utilizar middlewares para manejo de aspectos de solicitudes HTTP
+```bash
+const cors = require('cors');
+const morgan = require('morgan');
+
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({extended:false}));
+app.use(morgan('dev'));
+```
+
+5. Probar servidor:
+```bash
+npm run dev
+```
