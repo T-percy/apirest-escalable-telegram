@@ -2,12 +2,16 @@
 Guia paso a paso para construir apirest robusta y altamente escalable, separando backend en tres capas: [capa del servidor] [capa de red] [capa de componentes]; cada una con responsabilidad especifica
 
 ## Tabla de contenido
-- [Preparar entorno de trabajo](#Preparar-entorno-de-trabajo)
-- [Archivos de configuración](#Archivos-de-configuración)
-- [Instalar dependencias](#Instalar-dependencias)
-- [Ajustar package.json](#Ajustar-package.json)
-- [Control de versiones con git y github](#Control-de-versiones-con-git-y-github)
-- [Arquitectura backend (3 capas)](#Arquitectura-backend-(3-capas))
+1. [Preparar entorno de trabajo](#Preparar-entorno-de-trabajo)
+2. [Archivos de configuración](#Archivos-de-configuración)
+3. [Instalar dependencias](#Instalar-dependencias)
+4. [Ajustar package.json](#Ajustar-package.json)
+5. [Control de versiones con git y github](#Control-de-versiones-con-git-y-github)
+6. [Arquitectura backend (3 capas)](#Arquitectura-backend-(3-capas))
+7. [Crear y ejecutar servidor](#Crear-y-ejecutar-servidor)
+8. [Conectar API a base de datos](#Conectar-API-a-base-de-datos)
+
+
 
 
 ## Preparar entorno de trabajo
@@ -26,13 +30,13 @@ npm init -y
 ```
 
 ## Archivos de configuración
-1. Para que git omita archivos || estilos, reglas, buenas prácticas del código || variables de entorno:
+1. Para que git omita archivos `||` para estilos, reglas, buenas prácticas del código `||` para variables de entorno:
 ```bash
 touch .gitignore .editorconfig .eslintrc.json .prettierrc.json .env
 ```
-* `.gitignore` Ir a [gitignore.io](https://www.toptal.com/developers/gitignore/) || seleccionar: Node Windows Linux macOS || click en create || copiar y pegar en el archivo.
+* `.gitignore` Ir a [gitignore.io](https://www.toptal.com/developers/gitignore/) `||` escribir y seleccionar: Node Windows Linux macOS `||` click en create `||` copiar y pegar lo generado
 
-* `.editorconfig` Copiar y pegar el contenido de [editorconfig.org](https://editorconfig.org/) en el archivo || Asegurarse que en vscode esté instalada la extensión `EditorConfig for VS Code` 
+* `.editorconfig` Copiar y pegar el contenido de [editorconfig.org](https://editorconfig.org/) `||` Asegurarse que en vscode esté instalada la extensión `EditorConfig for VS Code` 
 
 * `.eslintrc.json` Copiar y pegar el contenido que se encuentra en [eslintrc.json](https://github.com/T-percy/archivos-de-configuracion-para-proyectos-web-/blob/main/.eslintrc.json)
 
@@ -44,12 +48,12 @@ touch .gitignore .editorconfig .eslintrc.json .prettierrc.json .env
 ## Instalar dependencias
 * `Paquetes para desarrollo`
 ```bash
-npm i eslint eslint-config-prettier eslint-plugin-prettier prettier nodemon -D
+npm i eslint eslint-config-prettier eslint-plugin-prettier prettier nodemon morgan dotenv -D
 ```
 
 * `Otras dependencias necesarias`
 ```bash
-npm i express dotenv multer cors morgan mongoose
+npm i express cors multer mongoose
 ```
 
 `express` Framework para crear el servidor
@@ -65,7 +69,7 @@ npm i express dotenv multer cors morgan mongoose
 `prettier` formatea automaticamente el código para seguir reglas predefinidas. Ayuda a la consistencia en el estilo del código.
 
 ## Ajustar package.json
-1. Configurar `main` y el `scripts` para entorno de desarrollo y producción; lint. 
+1. Configurar `main` y el `scripts` para entorno de desarrollo, de producción y lint. 
 
 ```bash
 "main": "server.js",
@@ -142,7 +146,7 @@ git push
     * `Carpeta public` >>> Para los archivos estaticos (frontend) y subir archivos
 
 
-## Creando y ejecutando servidor
+## Crear y ejecutar servidor
 1. En `server.js` importar `express`
 ```bash
 const express = require('express');
@@ -161,7 +165,7 @@ app.listen(PORT, () => {
     console.log('🔥🔥🔥 http://localhost:' + PORT + ' 🔥🔥🔥');
 });
 ```
-4. Declarar y utilizar middlewares para manejo de aspectos de solicitudes HTTP
+4. Declarar y utilizar middlewares para manejo de solicitudes HTTP
 ```bash
 const cors = require('cors');
 const morgan = require('morgan');
@@ -176,3 +180,54 @@ app.use(morgan('dev'));
 ```bash
 npm run dev
 ```
+
+## Conectar API a base de datos
+1. En `src` dentro de la carpeta `config` crear archivo(s) para conexión
+```bash
+touch mongodb.js mysqldb.js ...
+```
+2. En `mongodb.js` `a)`importar mongoose
+```bash
+const mongoose = require('mongoose');
+```
+ `b)`Declarar función de conexión 
+```bash
+const dbConnect = async () => {}
+```
+ `c)`Exportar la función 
+```bash
+module.exports = dbConnect;
+```
+ `e)`En el archivo `.env` crear variable de entorno
+```bash
+MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.ebrfadl.mongodb.net/database?retryWrites=true&w=majority
+```
+`f)`En `mongodb.js` dentro de la función, usando `try-catch` y dentro de `try{}` llamar la variable de entorno y guardarla como constante 
+```bash
+const MONGODB_URI = process.env.MONGODB_URI;
+```
+`g)`Usar metodo de mongoose para conectar DB, pasandole la variable de entorno como parametro
+```bash
+await mongoose.connect(MONGODB_URI);
+```
+`h)`Mandar al desarrollador mensaje de conexión exitosa
+```bash
+console.log('[mongodb]: ¡Conexión ✅!');
+```
+`i)`Dentro de `catch (error) {}` manejar el error y mostrarlo al desarrollador
+```bash
+console.log('[mongodb]: ¡Conexión ❌!', error.message);
+```
+`j)`En `server.js` importar e invocar la función
+```bash
+const dbConnect = require('./config/mongodb');
+
+dbConnect();
+```
+`k)`Verificar conexión con la DB
+```bash
+npm run dev
+```
+`[mongodb]: ¡Conexión ✅!`
+
+3. En `mysqldb.js` ...
