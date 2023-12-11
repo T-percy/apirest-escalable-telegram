@@ -2,19 +2,21 @@
 Guia paso a paso para construir apirest robusta y altamente escalable, separando backend en tres capas: [capa del servidor] [capa de red] [capa de componentes]; cada una con responsabilidad especifica
 
 ## Tabla de contenido
-1. [Preparar entorno de trabajo](#Preparar-entorno-de-trabajo)
-2. [Archivos de configuración](#Archivos-de-configuración)
-3. [Instalar dependencias](#Instalar-dependencias)
-4. [Ajustar package.json](#Ajustar-package.json)
-5. [Control de versiones con git y github](#Control-de-versiones-con-git-y-github)
-6. [Arquitectura backend (3 capas)](#Arquitectura-backend-(3-capas))
-7. [Crear y ejecutar servidor](#Crear-y-ejecutar-servidor)
-8. [Conectar API a base de datos](#Conectar-API-a-base-de-datos)
+1. [Preparar entorno de trabajo](#1.-Preparar-entorno-de-trabajo)
+2. [Archivos de configuración](#2.-Archivos-de-configuración)
+3. [Instalar dependencias](#3.-Instalar-dependencias)
+4. [Ajustar package.json](#4.-Ajustar-package.json)
+5. [Control de versiones con git y github](#5.-Control-de-versiones-con-git-y-github)
+6. [Arquitectura backend (3 capas)](#6.-Arquitectura-backend-(3-capas))
+7. [Crear y ejecutar servidor](#7.-Crear-y-ejecutar-servidor)
+8. [Conectar API a base de datos](#8.-Conectar-API-a-base-de-datos)
+9. [Definir modelo](#9.-Definir-modelo)
 
 
 
 
-## Preparar entorno de trabajo
+
+## 1. Preparar entorno de trabajo
 
 1. Instalar programas y/o herramientas como: node, vscode, git, terminal, entre otros.
 
@@ -29,7 +31,7 @@ Guia paso a paso para construir apirest robusta y altamente escalable, separando
 npm init -y
 ```
 
-## Archivos de configuración
+## 2. Archivos de configuración
 1. Para que git omita archivos `||` para estilos, reglas, buenas prácticas del código `||` para variables de entorno:
 ```bash
 touch .gitignore .editorconfig .eslintrc.json .prettierrc.json .env
@@ -45,7 +47,7 @@ touch .gitignore .editorconfig .eslintrc.json .prettierrc.json .env
 * `.env` Para separar y utilizar información sensible y/o configuraciones específicas del entorno en el que se ejecutará la aplicación.
 
 
-## Instalar dependencias
+## 3. Instalar dependencias
 * `Paquetes para desarrollo`
 ```bash
 npm i eslint eslint-config-prettier eslint-plugin-prettier prettier nodemon morgan dotenv -D
@@ -68,7 +70,7 @@ npm i express cors multer mongoose
 `eslint-plugin-prettier` Complemento de ESLint que ejecuta Prettier como una regla de ESLint. Integra a Prettier en el flujo de trabajo de ESLint.
 `prettier` formatea automaticamente el código para seguir reglas predefinidas. Ayuda a la consistencia en el estilo del código.
 
-## Ajustar package.json
+## 4. Ajustar package.json
 1. Configurar `main` y el `scripts` para entorno de desarrollo, de producción y lint. 
 
 ```bash
@@ -89,7 +91,7 @@ Opción 2 scripts
 "lint": "eslint"
 ```
 
-## Control de versiones con git y github
+## 5. Control de versiones con git y github
 1. `Repositorio local [git]`
 * Iniciar repositorio de git:
 ```bash
@@ -128,25 +130,25 @@ y en adelante solo usar:
 git push
 ```
 
-## Arquitectura backend (3 capas)
+## 6. Arquitectura backend (3 capas)
 * `carpeta src` 
     * `server.js` >>> CAPA DEL SERVIDOR: comprobar peticiones para que pasen al routes.js o sean rechazadas
     * `Carpeta network` >>> CAPA DE RED
         - `routes.js` ---Comprobar la ruta de la petición para llamar al componente correcto
         - `response.js` ---Gestionar respuestas coherentes ya sean de (exito o error) a las peticiones del cliente.
     * `Carpeta componentes` >>> CAPA DE COMPONENTES
-        - `Carpeta componente1` === Contiene archivos del componente
+        - `Carpeta messages` === Contiene archivos del componente
             - `network.js` ---Enviará petición al controlador y devolvera la respuesta al response.js
             - `controller.js` ---Ejecutará las acciones o funciones, segun la petición
             - `store.js` ---Responsable de dónde y cómo se guardará la información
             - `model.js` ---Definir la estructura de los datos, ya sean colecciones o tablas
-        - `Carpeta componente...`
+        - `Carpeta users...`
     * `Carpeta config` >>> Para configuraciones del proyecto como conexión a BD, etc, o cualquier otra configuración que necesite ser ajustada sin modificar el codigo fuente.
     * `Carpeta utils` >>> Para funciones helpers (ayudantes para tareas repetitivas)
     * `Carpeta public` >>> Para los archivos estaticos (frontend) y subir archivos
 
 
-## Crear y ejecutar servidor
+## 7. Crear y ejecutar servidor
 1. En `server.js` importar `express`
 ```bash
 const express = require('express');
@@ -181,7 +183,7 @@ app.use(morgan('dev'));
 npm run dev
 ```
 
-## Conectar API a base de datos
+## 8. Conectar API a base de datos
 1. En `src` dentro de la carpeta `config` crear archivo(s) para conexión
 ```bash
 touch mongodb.js mysqldb.js ...
@@ -231,3 +233,52 @@ npm run dev
 `[mongodb]: ¡Conexión ✅!`
 
 3. En `mysqldb.js` ...
+
+## 9. Definir modelo
+1. Definir la estructura de los datos (propiedades y tipos de datos) que se almacenarán en la DB, sean colecciones o tablas.
+
+`colecciones` `a)`En la capa de componentes o api, dentro de la carpeta de cada componente crear model.js 
+```bash
+- carpeta api
+    - carpeta messages
+        - messageModel.js
+    - carpeta users
+        - userModel.js
+    - carpeta chats
+        - chatModel.js
+```
+`b)`En `model.js` importar `mongoose` y separar la clase `Schema` de mongoose
+```bash
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+```
+`c)`Instanciar la clase `Schema` que recibe como argumento la `definición del esquema` con sus propiedades, tipos de datos, y los datos que son obligatorios, y guardarla en una constante
+```bash
+const messageSchema = new Schema({
+    chat: {
+        type: Schema.ObjectId,
+        ref: 'chat',
+    },
+    user: {
+        type: Schema.ObjectId,
+        ref: 'user',
+    },
+    message: {
+        type: String,
+        required: true,
+    },
+    createdDate: {
+        type: Date,
+        default: Date.now()
+    }
+});
+```
+`d)` `Definir el modelo` con el metodo `mongoose.model` usando dos argumentos: 1.`nombre de colección` que servirá para importar el modelo mismo y 2.`esquema creado` 
+```bash
+const messageModel = mongoose.model('message', messageSchema);
+```
+`e)`Exportar el modelo
+```bash
+module.exports = messageModel;
+```
+`f)`Repetir el proceso para crear los modelos de cada una de las demás entidades
