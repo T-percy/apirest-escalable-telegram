@@ -11,6 +11,7 @@ Guia paso a paso para construir apirest robusta y altamente escalable, separando
 7. [Crear y ejecutar servidor](#7.-Crear-y-ejecutar-servidor)
 8. [Conectar API a base de datos](#8.-Conectar-API-a-base-de-datos)
 9. [Definir modelo](#9.-Definir-modelo)
+10. [Rutas, organizar y separar capa de red](#10.-Rutas,-organizar-y-separar-capa-de-red)
 
 
 
@@ -282,3 +283,93 @@ const messageModel = mongoose.model('message', messageSchema);
 module.exports = messageModel;
 ```
 `f)`Repetir el proceso para crear los modelos de cada una de las demás entidades
+
+## 10. Rutas, organizar y separar capa de red
+1. Definir el enrutador principal en `routes.js` `a)`Importar las rutas de los distintos componentes de la aplicación
+```bash
+const message = require('../api/message/network');
+const user = require('../api/user/network');
+const chat = require('../api/chat/network');
+```
+`b)`Definir funcion de las rutas, tomando como argumento server
+```bash
+const routes = (server) => {}
+```
+`c)`Exportar la función routes para su uso
+```bash
+module.exports = routes;
+```
+`d)`Definir y usar cada una de esas rutas dentro de la función
+```bash
+server.use('/messages', message);
+server.use('/users', user);
+server.use('/chats', chat);
+```
+2. Utilizar el enrutador principal desde el servidor `server.js` `a)`importar el archivo routes.js asignandole la variable router, `b)`llamar la función importada pasandole a `app` como argumento
+```bash
+const router = require('./network/routes');
+
+router(app);
+```
+3. Gestionar respuestas coherentes para el cliente final `a)`en `carpeta utils` crear archivos para manejo de respuesta exitosa y de error
+```bash
+- utils
+    - handleSuccess.js
+    - handleError.js
+```
+`b)`En `handleSuccess.js` crear función success pasando sus parametros; usar `res.status()` para establecer el estado HTTP de la respuesta; usar `res.send()` para enviar respuesta al cliente en JSON, con dos propiedades => error: cadena vacía.  body: cuerpo de la respuesta; por último exportar la función. 
+```bash
+const success = (req, res, msg, status) => {
+    res.status(status || 200).send({
+        error: '',
+        body: msg,
+    });
+}
+
+module.exports = success;
+```
+`c)`En `handleError.js` crear función error pasando sus parametros; usar `console.error` para mostrar en consola detalles adicionales del error; usar `res.status()` y `res.send()` para enviar respuesta controlada del error al cliente en JSON, con dos propiedades => error: mensaje de error proporcionado.  body: cadena vacia, al no devolver datos por ser invalidos; por último exportar la función. 
+```bash
+const error = (req, res, msgError, status, details) => {
+    console.error(`[responseError]🚫: ${details}`);
+    res.status(status || 403).send({
+        error: msgError,
+        body: '',
+    });
+}
+
+module.exports = error;
+```
+`d)`En `response.js` importar archivos success y error, asignando cada uno a una constante; crear y exportar las funciones de success y error asignandoles las funciones de manejo de exito y error
+```bash
+const success = require('../utils/handleSuccess');
+const {error} = require('../utils/handleError');
+
+exports.success = success;
+exports.error = error;
+```
+4.En el archivo `network.js` de cada componente de la API preparar las rutas para las solicitudes HTTP `a)` importar express y response.js `b)`Crear enrutador de express `c)`Exportar el enrutador para ser usado por routes.js `d)`Crear las ruta `post` `get` `update` `delete` para probar con postman `e)` Repetir proceso con cada componente de la api
+```bash
+const express = require('express');
+const response = require('../../network/response');
+
+const router = express.Router();
+
+router.post('/', async (req, res) => {
+    res.send('Ruta post de messages ✅')
+});
+
+router.get('/', async (req, res) => {
+    res.send('Ruta get de messages ✅')
+});
+
+router.patch('/', async (req, res) => {
+    res.send('Ruta patch de messages ✅')
+});
+
+router.delete('/', async (req, res) => {
+    res.send('Ruta delete de messages ✅')
+});
+
+module.exports = router;
+```

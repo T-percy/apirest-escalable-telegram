@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 
+const router = require('./network/routes')
 const dbConnect = require('./config/mongodb');
 
 const app = express();
@@ -12,10 +13,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended:false}));
 app.use(morgan('dev'));
 
-app.get('/', (req, res) => {
-    res.send('Comunicandome con metodo get desde el server.js')
-})
-
+router(app);
 dbConnect();
 
 const PORT = process.env.PORT || 3000;
