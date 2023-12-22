@@ -1,23 +1,21 @@
 # APIRest escalable telegram
-Guia paso a paso para construir apirest robusta y altamente escalable, separando backend en tres capas: [capa del servidor] [capa de red] [capa de componentes]; cada una con responsabilidad especifica
+Guia paso a paso para construir apirest con modularización de entidades,  altamente escalable, separación de responsabilidades por capas del backend: [capa del servidor] [capa de red] [capa de componentes]
 
 ## Tabla de contenido
-1. [Preparar entorno de trabajo](#1.-Preparar-entorno-de-trabajo)
-2. [Archivos de configuración](#2.-Archivos-de-configuración)
-3. [Instalar dependencias](#3.-Instalar-dependencias)
-4. [Ajustar package.json](#4.-Ajustar-package.json)
-5. [Control de versiones con git y github](#5.-Control-de-versiones-con-git-y-github)
-6. [Arquitectura backend (3 capas)](#6.-Arquitectura-backend-(3-capas))
-7. [Crear y ejecutar servidor](#7.-Crear-y-ejecutar-servidor)
-8. [Conectar API a base de datos](#8.-Conectar-API-a-base-de-datos)
-9. [Definir modelo](#9.-Definir-modelo)
-10. [Rutas, organizar y separar capa de red](#10.-Rutas,-organizar-y-separar-capa-de-red)
+1. [Preparar entorno de trabajo](#1-Prepararentornodetrabajo)
+2. [Archivos de configuración](#2-Archivos-de-configuración)
+3. [Instalar dependencias](#3-Instalar-dependencias)
+4. [Ajustar package.json](#4-Ajustar-package.json)
+5. [Control de versiones con git y github](#5-Control-de-versiones-con-git-y-github)
+6. [Arquitectura backend (3 capas)](#6-Arquitectura-backend-(3-capas))
+7. [Crear y ejecutar servidor](#7-Crear-y-ejecutar-servidor)
+8. [Conectar API a base de datos](#8-Conectar-API-a-base-de-datos)
+9. [Organizar rutas y separar capa de red](#9-Organizar-rutas-y-separar-capa-de-red)
+10. [Definir modelo](#10-Definir-modelo)
+11. [Logica y manejo de solicitudes HTTP](#11-Logica-y-manejo-de-solicitudes-HTTP)
 
 
-
-
-
-## 1. Preparar entorno de trabajo
+## 1 Preparar entorno de trabajo
 
 1. Instalar programas y/o herramientas como: node, vscode, git, terminal, entre otros.
 
@@ -32,7 +30,7 @@ Guia paso a paso para construir apirest robusta y altamente escalable, separando
 npm init -y
 ```
 
-## 2. Archivos de configuración
+## 2 Archivos de configuración
 1. Para que git omita archivos `||` para estilos, reglas, buenas prácticas del código `||` para variables de entorno:
 ```bash
 touch .gitignore .editorconfig .eslintrc.json .prettierrc.json .env
@@ -48,7 +46,7 @@ touch .gitignore .editorconfig .eslintrc.json .prettierrc.json .env
 * `.env` Para separar y utilizar información sensible y/o configuraciones específicas del entorno en el que se ejecutará la aplicación.
 
 
-## 3. Instalar dependencias
+## 3 Instalar dependencias
 * `Paquetes para desarrollo`
 ```bash
 npm i eslint eslint-config-prettier eslint-plugin-prettier prettier nodemon morgan dotenv -D
@@ -56,7 +54,7 @@ npm i eslint eslint-config-prettier eslint-plugin-prettier prettier nodemon morg
 
 * `Otras dependencias necesarias`
 ```bash
-npm i express cors multer mongoose
+npm i express cors multer mongoose jsonwebtoken cookie-parser
 ```
 
 `express` Framework para crear el servidor
@@ -66,12 +64,14 @@ npm i express cors multer mongoose
 `cors` Permite conexiones de clientes al backend, evitando error de origen cruzado entre navegadores
 `morgan` Para ver las peticiones del servidor en tiempo real.
 `mongoose` Gestión de conexión con mongoDB.
+`jsonwebtoken` 
+`cookie-parser` 
 `eslint` Ayuda a identificar y corregir errores de código, así como a aplicar y hacer cumplir convenciones de estilo.
 `eslint-config-prettier` Desactiva las reglas relacionadas con ESLint, para que Prettier las maneje. Establece la configuración de ESLint para que no tenga conflicto con las reglas de Prettier.
 `eslint-plugin-prettier` Complemento de ESLint que ejecuta Prettier como una regla de ESLint. Integra a Prettier en el flujo de trabajo de ESLint.
 `prettier` formatea automaticamente el código para seguir reglas predefinidas. Ayuda a la consistencia en el estilo del código.
 
-## 4. Ajustar package.json
+## 4 Ajustar package.json
 1. Configurar `main` y el `scripts` para entorno de desarrollo, de producción y lint. 
 
 ```bash
@@ -92,7 +92,7 @@ Opción 2 scripts
 "lint": "eslint"
 ```
 
-## 5. Control de versiones con git y github
+## 5 Control de versiones con git y github
 1. `Repositorio local [git]`
 * Iniciar repositorio de git:
 ```bash
@@ -131,7 +131,7 @@ y en adelante solo usar:
 git push
 ```
 
-## 6. Arquitectura backend (3 capas)
+## 6 Arquitectura backend (3 capas)
 * `carpeta src` 
     * `server.js` >>> CAPA DEL SERVIDOR: comprobar peticiones para que pasen al routes.js o sean rechazadas
     * `Carpeta network` >>> CAPA DE RED
@@ -149,7 +149,7 @@ git push
     * `Carpeta public` >>> Para los archivos estaticos (frontend) y subir archivos
 
 
-## 7. Crear y ejecutar servidor
+## 7 Crear y ejecutar servidor
 1. En `server.js` importar `express`
 ```bash
 const express = require('express');
@@ -184,7 +184,7 @@ app.use(morgan('dev'));
 npm run dev
 ```
 
-## 8. Conectar API a base de datos
+## 8 Conectar API a base de datos
 1. En `src` dentro de la carpeta `config` crear archivo(s) para conexión
 ```bash
 touch mongodb.js mysqldb.js ...
@@ -235,56 +235,8 @@ npm run dev
 
 3. En `mysqldb.js` ...
 
-## 9. Definir modelo
-1. Definir la estructura de los datos (propiedades y tipos de datos) que se almacenarán en la DB, sean colecciones o tablas.
 
-`colecciones` `a)`En la capa de componentes o api, dentro de la carpeta de cada componente crear model.js 
-```bash
-- carpeta api
-    - carpeta messages
-        - messageModel.js
-    - carpeta users
-        - userModel.js
-    - carpeta chats
-        - chatModel.js
-```
-`b)`En `model.js` importar `mongoose` y separar la clase `Schema` de mongoose
-```bash
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-```
-`c)`Instanciar la clase `Schema` que recibe como argumento la `definición del esquema` con sus propiedades, tipos de datos, y los datos que son obligatorios, y guardarla en una constante
-```bash
-const messageSchema = new Schema({
-    chat: {
-        type: Schema.ObjectId,
-        ref: 'chat',
-    },
-    user: {
-        type: Schema.ObjectId,
-        ref: 'user',
-    },
-    message: {
-        type: String,
-        required: true,
-    },
-    createdDate: {
-        type: Date,
-        default: Date.now()
-    }
-});
-```
-`d)` `Definir el modelo` con el metodo `mongoose.model` usando dos argumentos: 1.`nombre de colección` que servirá para importar el modelo mismo y 2.`esquema creado` 
-```bash
-const messageModel = mongoose.model('message', messageSchema);
-```
-`e)`Exportar el modelo
-```bash
-module.exports = messageModel;
-```
-`f)`Repetir el proceso para crear los modelos de cada una de las demás entidades
-
-## 10. Rutas, organizar y separar capa de red
+## 9 Organizar rutas y separar capa de red
 1. Definir el enrutador principal en `routes.js` `a)`Importar las rutas de los distintos componentes de la aplicación
 ```bash
 const message = require('../api/message/network');
@@ -348,7 +300,7 @@ const {error} = require('../utils/handleError');
 exports.success = success;
 exports.error = error;
 ```
-4.En el archivo `network.js` de cada componente de la API preparar las rutas para las solicitudes HTTP `a)` importar express y response.js `b)`Crear enrutador de express `c)`Exportar el enrutador para ser usado por routes.js `d)`Crear las ruta `post` `get` `update` `delete` para probar con postman `e)` Repetir proceso con cada componente de la api
+4. En el archivo `network.js` de cada componente de la API preparar las rutas para las solicitudes HTTP `a)` importar express y response.js `b)`Crear enrutador de express `c)`Exportar el enrutador para ser usado por routes.js `d)`Crear las ruta `post` `get` `update` `delete` para probar con postman `e)` Repetir proceso con cada componente de la api
 ```bash
 const express = require('express');
 const response = require('../../network/response');
@@ -373,3 +325,127 @@ router.delete('/', async (req, res) => {
 
 module.exports = router;
 ```
+
+## 10 Definir modelo
+1. Definir la estructura de los datos (propiedades y tipos de datos) que se almacenarán en la DB, sean colecciones o tablas.
+
+`colecciones` `a)`En la capa de componentes o api, dentro de la carpeta de cada componente crear model.js 
+```bash
+- carpeta api
+    - carpeta messages
+        - messageModel.js
+    - carpeta users
+        - userModel.js
+    - carpeta chats
+        - chatModel.js
+```
+`b)`En `model.js` importar `mongoose` y separar la clase `Schema` de mongoose
+```bash
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+```
+`c)`Instanciar la clase `Schema` que recibe como argumento la `definición del esquema` con sus propiedades, tipos de datos, y los datos que son obligatorios, y guardarla en una constante
+```bash
+const messageSchema = new Schema({
+    chat: {
+        type: Schema.ObjectId,
+        ref: 'chat',
+    },
+    user: {
+        type: Schema.ObjectId,
+        ref: 'user',
+    },
+    message: {
+        type: String,
+        required: true,
+    },
+    createdDate: {
+        type: Date,
+        default: Date.now()
+    }
+});
+```
+`d)` `Definir el modelo` con el metodo `mongoose.model` usando dos argumentos: 1.`nombre de colección` que servirá para importar el modelo mismo y 2.`esquema creado` 
+```bash
+const messageModel = mongoose.model('message', messageSchema);
+```
+`e)`Exportar el modelo
+```bash
+module.exports = messageModel;
+```
+`f)`Repetir el proceso para crear los modelos de cada una de las demás entidades
+
+
+## 11 Logica y manejo de peticiones HTTP
+
+### Ruta post
+1. En `store.js`, `a)`Importar el modelo del componente `b)`Definir función asincrona que tome el objeto a crear como parametro `c)`Crear instancia del modelo con los datos del objeto, usando await `d)`En bloque `try` guardar la nueva instancia en la DB, usando el metodo `save()` que proporciona `mongoose`, si es exitoso retornar la instancia `e)`Si ocurre un error capturarlo en el catch y retornarlo `f)`Exportar la función.
+```bash
+const Model = require('./message.model');
+
+const addMessage = async (message) => {
+    const myMessage = await new Model(message);
+    try {
+        const savedMsg = await myMessage.save();
+        return savedMsg;
+    } catch (error) {
+        return error;
+    }
+}
+
+module.exports = {
+    add: addMessage,
+}
+```
+2. En `controller.js`, que manejará la logica como intermediario entre las rutas y las funciones de store.js. `a)`Importar el archivo de almacenamiento del componente `b)`Declarar función asincrona con parametros requeridos para crear el objeto. `c)`Verificar que los parámetros estén presentes. Si falta alguno, la función registra un mensaje de error para el desarrollador y para el usuario final. `d)`Crear objeto con sus propiedades que inicializan con los valores de los parametros respectivos de la función `e)`Con el bloque `try` agregar el objeto al almacenamiento, usando la función del store, asignarla a una constante y retornarla `f)`Si hay algún error, se captura en el bloque catch y se retorna el error. `g)`Exportar la función 
+```bash
+const store = require('./message.store');
+
+const createMessage = async (chat, user, message) => {
+
+    if (!chat || !user || !message) {
+        console.error('[message.controller]: No se registró chat o usuario o mensaje');
+        throw new Error('Datos incorrectos');
+    }
+
+    const dataMessage = {
+        chat: chat,
+        user: user,
+        message: message,
+        date: new Date(),
+    };
+
+    try {
+        const created = await store.add(dataMessage);
+        return created;
+    } catch (error) {
+        return error;
+    }
+
+}
+```
+3. En `network.js`, `a)`Importar las dependencias necesarias para manejar las rutas, las respuestas y la lógica `b)`Crear un router de express `c)`CRear y definir la ruta post, crear una anfn asincrona`d)`En el bloque try llamar a la función del controlador con los datos de la solicitud con await y asignarla a una constante `e)`Responder con éxito utilizando el módulo 'response' `f)`En caso de error, responder con un mensaje de error utilizando el módulo 'response' `g)`Exportar el router `h)`Probar con postman
+```bash
+const express = require('express');
+const response = require('../../network/response');
+const controller = require('./message.controller');
+
+const router = express.Router();
+
+router.post('/', async (req, res) => {
+    try {
+        const dataMessage = 'await controller.createMessage(req.body.chat, req.body.user, req.body.message, req.file); ✅';
+        response.success(req, res, dataMessage, 201);
+} catch (error) {
+        response.error(req, res, 'Información invalida', 400, error);
+}
+});
+```
+
+
+
+### Ruta get
+
+### Ruta patch
+
+### Ruta delete
