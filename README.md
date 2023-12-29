@@ -1,8 +1,8 @@
-# APIRest escalable telegram
+# APIRest modular telegram
 Guia paso a paso para construir apirest con modularización de entidades,  altamente escalable, separación de responsabilidades por capas del backend: [capa del servidor] [capa de red] [capa de componentes]
 
 ## Tabla de contenido
-1. [Preparar entorno de trabajo](#1-Prepararentornodetrabajo)
+1. [Preparar entorno de trabajo](#1-Preparar-entorno-de-trabajo)
 2. [Archivos de configuración](#2-Archivos-de-configuración)
 3. [Instalar dependencias](#3-Instalar-dependencias)
 4. [Ajustar package.json](#4-Ajustar-package.json)
@@ -11,8 +11,9 @@ Guia paso a paso para construir apirest con modularización de entidades,  altam
 7. [Crear y ejecutar servidor](#7-Crear-y-ejecutar-servidor)
 8. [Conectar API a base de datos](#8-Conectar-API-a-base-de-datos)
 9. [Organizar rutas y separar capa de red](#9-Organizar-rutas-y-separar-capa-de-red)
-10. [Definir modelo](#10-Definir-modelo)
-11. [Logica y manejo de solicitudes HTTP](#11-Logica-y-manejo-de-solicitudes-HTTP)
+10. [Servir archivos estaticos](#10-Servir-archivos-estaticos)
+11. [Definir modelo](#10-Definir-modelo)
+12. [Logica y manejo de solicitudes HTTP](#11-Logica-y-manejo-de-solicitudes-HTTP)
 
 
 ## 1 Preparar entorno de trabajo
@@ -326,7 +327,41 @@ router.delete('/', async (req, res) => {
 module.exports = router;
 ```
 
-## 10 Definir modelo
+## 10 Servir archivos estaticos
+Configuración básica para dar disponibiliad a subir el frontend:
+1. `a)` En `src` crear carpeta "public" `b)`En `public` crear carpetas `files`, `css` y dentro de css, crear el archivo `style.css` para el estilo y diseño de la pagina.  
+```bash
+-public
+    -css
+        style.css
+    -files
+    -index.html
+```
+luego dentro de public, crear el archivo `index.html` con estructura básica de página web estática y enlazando con la hoja de estilo ubicada en la carpeta css
+```bash
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <h1>Archivo estatico</h1>
+</body>
+</html>
+```
+2. En `server.js` `a)`Importar el módulo `path` de Node para trabajar con rutas de archivos y directorios. `b)`Agregar middleware `app.use(...)` a la cadena de manejo de solicitudes de la aplicación. `c)`Usar la función middleware`express.static()` de Express para servir archivos estáticos. `d)`Usar `path.join(__dirname, 'public')` para combinar la ruta del directorio actual (__dirname) con el subdirectorio "public". || __dirname es una variable global en Node.js que representa la ruta del directorio del script actual.
+
+```bash
+const path = require('path');
+
+app.use(express.static(path.join(__dirname, 'public')));
+```
+
+## 11 Definir modelo
 1. Definir la estructura de los datos (propiedades y tipos de datos) que se almacenarán en la DB, sean colecciones o tablas.
 
 `colecciones` `a)`En la capa de componentes o api, dentro de la carpeta de cada componente crear model.js 
@@ -376,7 +411,7 @@ module.exports = messageModel;
 `f)`Repetir el proceso para crear los modelos de cada una de las demás entidades
 
 
-## 11 Logica y manejo de peticiones HTTP
+## 12 Logica y manejo de peticiones HTTP
 
 ### Ruta post
 1. En `store.js`, `a)`Importar el modelo del componente `b)`Definir función asincrona que tome el objeto a crear como parametro `c)`Crear instancia del modelo con los datos del objeto, usando await `d)`En bloque `try` guardar la nueva instancia en la DB, usando el metodo `save()` que proporciona `mongoose`, si es exitoso retornar la instancia `e)`Si ocurre un error capturarlo en el catch y retornarlo `f)`Exportar la función.
@@ -397,7 +432,7 @@ module.exports = {
     add: addMessage,
 }
 ```
-2. En `controller.js`, que manejará la logica como intermediario entre las rutas y las funciones de store.js. `a)`Importar el archivo de almacenamiento del componente `b)`Declarar función asincrona con parametros requeridos para crear el objeto. `c)`Verificar que los parámetros estén presentes. Si falta alguno, la función registra un mensaje de error para el desarrollador y para el usuario final. `d)`Crear objeto con sus propiedades que inicializan con los valores de los parametros respectivos de la función `e)`Con el bloque `try` agregar el objeto al almacenamiento, usando la función del store, asignarla a una constante y retornarla `f)`Si hay algún error, se captura en el bloque catch y se retorna el error. `g)`Exportar la función 
+2. En `controller.js` que manejará la logica como intermediario entre las rutas y las funciones de store.js. `a)`Importar el archivo de almacenamiento del componente `b)`Declarar función asincrona con parametros requeridos para crear el objeto. `c)`Verificar que los parámetros estén presentes. Si falta alguno, la función registra un mensaje de error para el desarrollador y otro para el usuario final. `d)`Crear objeto con sus propiedades que inicializan con los valores de los parametros respectivos de la función `e)`Con el bloque `try` agregar el objeto al almacenamiento, usando la función del store, asignarla a una constante y retornarla `f)`Si hay algún error, se captura en el bloque catch y se retorna el error. `g)`Exportar la función 
 ```bash
 const store = require('./message.store');
 
@@ -421,10 +456,13 @@ const createMessage = async (chat, user, message) => {
     } catch (error) {
         return error;
     }
-
 }
+
+module.exports = {
+    create: createMessage,
+};
 ```
-3. En `network.js`, `a)`Importar las dependencias necesarias para manejar las rutas, las respuestas y la lógica `b)`Crear un router de express `c)`CRear y definir la ruta post, crear una anfn asincrona`d)`En el bloque try llamar a la función del controlador con los datos de la solicitud con await y asignarla a una constante `e)`Responder con éxito utilizando el módulo 'response' `f)`En caso de error, responder con un mensaje de error utilizando el módulo 'response' `g)`Exportar el router `h)`Probar con postman
+3. En `network.js`, `a)`Importar las dependencias necesarias para manejar las rutas, las respuestas y la lógica `b)`Crear un router de express `c)`CRear y definir la ruta post, con función asincrona`d)`En el bloque try llamar a la función del controlador con los datos de la solicitud con await y asignarla a una constante `e)`Responder con éxito utilizando el módulo 'response' `f)`En caso de error, responder con un mensaje de error utilizando el módulo 'response' `g)`Exportar el router `h)`Probar con postman
 ```bash
 const express = require('express');
 const response = require('../../network/response');
@@ -440,12 +478,14 @@ router.post('/', async (req, res) => {
         response.error(req, res, 'Información invalida', 400, error);
 }
 });
+
+module.exports = router;
 ```
-
-
 
 ### Ruta get
 
 ### Ruta patch
 
 ### Ruta delete
+
+
